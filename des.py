@@ -132,7 +132,7 @@ shift_table = [1, 1, 2, 2,
 
 
 
-def initial_perm(plaintext):
+def initial_perm_f(plaintext):
     plaintext = "".join(plaintext)
     x = []
     for i in initial_perm_table:
@@ -172,14 +172,12 @@ def list_x(text, num):
         x.append(text[i: i+num])
     return x
 
-def shift(key, round):
-    "".join(key)
-    for i in range(shift_table[round]):
-        x = key[1:28]
-        x.append(key[0])
-    return x
 
-def expansion_p(key):
+def shift(key, round):
+    key = "".join(key)
+    return list_x(key[1:28] + key[0], 7)
+
+def expansion_p_f(key):
     key = "".join(key)
     x = []
     for i in exp_d_table:
@@ -202,48 +200,60 @@ def xor(text1, text2):
             x.append('0')
         else:
             x.append('1')
-    return list_x(x, 8)
+    return list_x(x, 6)
 
 def str2dec(text):
-    sum = 0
-    count = len(text)
-    for i in text:
-        sum += count ** int(i)
-        count -= 1
-    return sum
+#     sum = 0
+#     count = len(text)
+#     for i in text:
+#         sum += count ** int(i)
+#         count -= 1
+#     return sum
+    return int(text, 2)
 
-def s_box(text):
+def s_box_f(text):
     text = list_x(text, 6)
     x = []
     count = 0
     for i in text:
         row = str2dec(i[0] + i[5])
         col = str2dec(i[1:5])
-        x.append(decimal_to_binary(sbox_table[count][row-1][col-1], 4))
+        # print(i[0] + i[5], '\t', i[1:5])
+        # print(row, '\t' ,col)
+        # print('s', sbox_table[count][row][col])
+        x.append(decimal_to_binary(sbox_table[count][row][col], 4))
+        count += 1
     return x
 
-def p_box(text):
+def p_box_f(text):
     text = ''.join(text)
     x = []
     for i in per_table:
         x.append(text[i-1])
-    return x
+    return list_x(x, 8)
+
+def final_permutaion_f(text):
+    text = ''.join(text)
+    x = []
+    for i in final_perm_table:
+        x.append(text[i-1])
+    return list_x(x, 8)
         
 
 
 
 
 
-message = "JASMIN"  #input
+message = "ARIAL"  #input
 round = 2   #input
 plaintext = padding(message)
-initial_perm = initial_perm(plaintext)
+initial_perm = initial_perm_f(plaintext)
 key = "1111111111111111111111111111111100000000000000000000000000000000"
 inital_key = inital_key(key)
 k_L = inital_key[:4]
 k_R = inital_key[4:]
-plaintext_L = plaintext[:4]
-plaintext_R = plaintext[4:]
+plaintext_L = initial_perm[:4]
+plaintext_R = initial_perm[4:]
 
 
 print('plaintext:', plaintext)
@@ -257,10 +267,10 @@ for i in range(round):
     key_compression_p = compression_p(k_L_shift + k_R_shift)
     
 
-    expansion_p = expansion_p(plaintext_R)
+    expansion_p = expansion_p_f(plaintext_R)
     exp_xor_key_com_p = xor(expansion_p, key_compression_p)
-    s_box = s_box(exp_xor_key_com_p)
-    p_box = p_box(s_box)
+    s_box = s_box_f(exp_xor_key_com_p)
+    p_box = p_box_f(s_box)
 
 
     print('k_L:', k_L)
@@ -272,15 +282,24 @@ for i in range(round):
     print('expansion P:', expansion_p)
     print('exp xor key com p:', exp_xor_key_com_p)
     print('s_box:', s_box)
+    print('P_box:', p_box)
 
 
-    # # set variable for new round
-    # plaintext_L = plaintext_R
-    # plaintext_R = xor(p_box, plaintext_L)
-    # k_L = k_L_shift
-    # k_R = k_R_shift
+    # set variable for new round
+    temp = plaintext_R
+    plaintext_R = list_x(xor(p_box, plaintext_L), 8)
+    plaintext_L = temp
+    k_L = k_L_shift
+    k_R = k_R_shift
+    print('plaintext_L', plaintext_L)
+    print('plaintext_R', plaintext_R)
 
-    print(plaintext_R)
+x = plaintext_L + plaintext_R
+
+final_perm = final_permutaion_f(x)
+print("Cipertext", final_perm)
+
+
 
 
 
