@@ -153,7 +153,18 @@ def decimal_to_binary(num, x):
         binary = chr(temp + 48) + binary
     return binary
 
-def padding(message):
+def padding1(message):
+    message_b = []
+    for i in message:
+        message_b.append(decimal_to_binary(ord(i), 8))
+    count = 1
+    while(len(message_b) < 8):
+        message_b.append('00000020')
+        count += 1
+    return list_x(message_b, 8)
+
+
+def padding2(message):
     message_b = []
     for i in message:
         message_b.append(decimal_to_binary(ord(i), 8))
@@ -165,6 +176,21 @@ def padding(message):
     message_b.append(decimal_to_binary(count, 8))
     return list_x(message_b, 8)
 
+def padding3(message):
+    message_b = []
+    count = 8
+    for i in message:
+        message_b.append(decimal_to_binary(ord(i), 8))
+        count -= 1
+    temp = decimal_to_binary(int(count), 8)
+    while(len(message_b) < 8):
+        message_b.append(temp)
+    
+    return list_x(message_b, 8)
+    
+
+
+
 def list_x(text, num):
     text = "".join(text)
     x = []
@@ -175,7 +201,9 @@ def list_x(text, num):
 
 def shift(key, round):
     key = "".join(key)
-    return list_x(key[1:28] + key[0], 7)
+    for i in range(shift_table[round-1]):
+        key = key[1:28] + key[0]
+    return list_x(key, 7)
 
 def expansion_p_f(key):
     key = "".join(key)
@@ -203,12 +231,6 @@ def xor(text1, text2):
     return list_x(x, 6)
 
 def str2dec(text):
-#     sum = 0
-#     count = len(text)
-#     for i in text:
-#         sum += count ** int(i)
-#         count -= 1
-#     return sum
     return int(text, 2)
 
 def s_box_f(text):
@@ -218,9 +240,6 @@ def s_box_f(text):
     for i in text:
         row = str2dec(i[0] + i[5])
         col = str2dec(i[1:5])
-        # print(i[0] + i[5], '\t', i[1:5])
-        # print(row, '\t' ,col)
-        # print('s', sbox_table[count][row][col])
         x.append(decimal_to_binary(sbox_table[count][row][col], 4))
         count += 1
     return x
@@ -244,9 +263,23 @@ def final_permutaion_f(text):
 
 
 
-message = "ARIAL"  #input
+# message = "ARIAL"  #input
+
+message = input("Enter message: ")
 round = 2   #input
-plaintext = padding(message)
+
+print('[1] 00000020 00000020 00000020')
+print('[2] 00000000 00000000 00000011')
+print('[3] 00000011 00000011 00000011')
+padding = int(input('Padding by: '))
+if padding == 1:
+    plaintext = padding1(message)
+elif padding == 2:
+    plaintext = padding2(message)
+else:
+    plaintext = padding3(message)
+    
+
 initial_perm = initial_perm_f(plaintext)
 key = "1111111111111111111111111111111100000000000000000000000000000000"
 inital_key = inital_key(key)
@@ -298,12 +331,6 @@ x = plaintext_L + plaintext_R
 
 final_perm = final_permutaion_f(x)
 print("Cipertext", final_perm)
-
-
-
-
-
-
 
 
 
